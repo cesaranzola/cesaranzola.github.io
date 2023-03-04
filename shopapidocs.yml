@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: ECOS - Upload a document
+  title: SHOP
   # use the pipeline to wrtie multi-line comment
   description: |
     # About Us:
@@ -14,7 +14,7 @@ info:
   # YAML utiliza camel case for naming their keys
   termsOfService: https://example.com
   contact:
-    name: ECOS
+    name: SHOP
     url: http//dummy.com
     email: support@example.com
   license:
