@@ -1,0 +1,523 @@
+openapi: 3.0.1
+info:
+  title: ECOS - Upload a document
+  # use the pipeline to wrtie multi-line comment
+  description: |
+    # About Us:
+      ***Shopex*** is a technology-driven _e-commerce_ platform, committed to providing our customers with the latest gadgets and electronics. Our team is passionate about technology and we strive to offer the best shopping experience possible. With a vast selection of products and ***`competitive pricing`***, we make it easy to find what you need. Whether you're a tech enthusiast or just looking for a reliable device, we've got you covered. ***Welcome to our online store.***
+      
+    # Categories
+      - Mobiles
+      - Cameras
+      - Tablets
+    
+  # YAML utiliza camel case for naming their keys
+  termsOfService: https://example.com
+  contact:
+    name: ECOS
+    url: http//dummy.com
+    email: support@example.com
+  license:
+    name: License Apache 2.0
+    url: https://www.apache.org/
+  version: 1.0.0
+  # the Swagger UI doesn't know how to present your customs properties or extensions, therefore they won't be shown.
+  x-custom-info:
+externalDocs:
+  description: External Documentation
+  url: https://example.com
+servers:
+  - url: http://example.com
+  - url: https://{username}/server.com:{port}/{version}
+    variables:
+      username:
+        default: demo
+        description: This is a value assign by the value provider
+      port:
+        enum:
+          - "8843"
+          - "443"
+        default: "8432"
+      version:
+        default: v1
+tags:
+  - name: Categories
+    description: Category-related operations
+  - name: Products
+    description: Products-related operations
+  - name: Orders
+    description: Orders-related operations
+security:
+  - BasicAuth: []
+  - BearerAuth: []
+  - oAuth2AuthCode:
+    - read
+    - write
+    - admin
+paths:
+  /categories:
+    get:
+      security:
+        - ApiKeyAuth: []
+        
+      tags:
+        - Categories
+      summary: List of all categories
+      description: Returns the list of categories
+        support by EazyShop
+      operationId: getCategories
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          # required: true  = In this case we're not going to 
+          examples:
+            mobiles:
+              value: 101
+            laptops:
+              value: now
+            headphones:
+              value: 102
+            televisions:
+              value: 234
+      responses:
+        200:
+          description: Successful operation
+          
+          content:
+            application/json:
+              schema:
+                type: array
+                # items is mandatory when you define a schema with array type
+                # The reason why we don't indent items, is because it only belongs  to the type and nothing else
+                items:
+                  $ref: "#/components/schemas/Category"
+              examples:
+                all-categories-data:
+                  summary: Categories example data
+                  value:
+                    - categoryId: 101
+                      name: Mobiles
+                    - categoryId: 102
+                      name: Laptops
+                    - categoryId: 103
+                      name: Headphones
+                    - categoryId: 104
+                      name: Headphones
+                single-category-data:
+                  summary: Single category example data
+                  value:
+                    - categoryId: 101
+                      name: Mobiles
+  /categories/{categoryId}:
+    get:
+      tags:
+        - Categories
+      summary: Get the category details
+      description: Returns the details of an specific id category
+      operationId: getCategoryDetails
+      # this is how you can opt out of the security mechanism defined at the root level of your documentation
+      security: []
+      parameters:
+        - name: categoryId
+          in: path
+          # for path parameters the required property is always mandatory 
+          required: true
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 50
+          # Notice that the example is outside the defined schema, it belongs to the path as
+          # a property, not to schema itself. Don't forget this.
+          example: 15
+      
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      description: |
+        Get a list of all the products present in the shop
+      operationId: getProducts
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          example: 50
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+              examples:
+                products-data:
+                  summary: Products example data
+                  value:
+                    - productId: 101
+                      name: Apple Iphone 13 Pro
+                      price: 999.99 # add a decimal value greater than zero, to indicate that the number can be decimal, otherwise it will be shown as an integer
+                      categoryName: Mobiles
+                      quantity: 44
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      summary: Get details of product
+      description: Get a details page of a product with an id
+      operationId: getProductsDetails
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create order
+      description: |
+        Post order details to shop for
+        processing and shipping
+      operationId: saveOrderDetails
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: array 
+                  items:
+                    $ref: "#/components/schemas/Product"
+                address:
+                  $ref: "#/components/schemas/Address"
+                    
+      responses:
+        # successfully created at the backend
+        201:
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: integer
+          links:
+            GetOrderByOrderId:
+              $ref: "#/components/links/GetOrderByOrderId"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Orders
+      summary: Update order
+      description: |
+        Update order details to shop for
+        processing and shipping
+      operationId: updateOrderDetails
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: integer
+                products:
+                  type: array 
+                  items:
+                    $ref: "#/components/schemas/Product"
+                address:
+                  $ref: "#/components/schemas/Address"
+                    
+      responses:
+        # successfully created at the backend
+        201:
+          description: Order created successfully
+          # Since user already saw a response, there's not need to repeat the information here
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - Orders
+      summary: Delete order
+      description: Delete order details
+      operationId: deleteOrderDetails
+      parameters:
+        - $ref: "#/components/parameters/orderIdQueryParam"
+      responses:
+        204:
+          description: Order cancel successfully
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - Orders
+      summary: Get order details
+      description: Get a page with the details of your order
+      operationId: getOrderDetails
+      parameters:
+        - $ref: "#/components/parameters/orderIdQueryParam"
+      responses:
+        200:
+          description: Fetch Order details retreive successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array 
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  address:
+                    $ref: "#/components/schemas/Address"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order details
+      description: Get a page with the details of your order
+      operationId: getOrderDetailsUsingPathParam
+      parameters:
+        - $ref: "#/components/parameters/orderPathParam"
+      deprecated: true
+      responses:
+        200:
+          description: Fetch Order details retreive successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array 
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  address:
+                    $ref: "#/components/schemas/Address"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /oneOfOrder:
+    post:
+      tags:
+        - Orders
+      summary: Insert OneOf the order details
+      description: Insert OneOf the order details into the shop
+      operationId: demoOfOneOf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: object
+                  oneOf:
+                    - $ref: "#/components/schemas/Mobile"
+                    - $ref: "#/components/schemas/Laptop"
+                address:
+                  $ref: "#/components/schemas/Address"
+              required:
+                - products
+                - address
+      responses:
+        200:
+          description: Order place successfully
+  /anyOfOrder:
+    get:
+      tags:
+        - Orders
+      summary: Get order details
+      description: Get order detauls based on Order ID
+      operationId: demoOfAnyOf
+      parameters:
+        - $ref: "#/components/parameters/orderIdQueryParam"
+        - name: fetchType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: 
+              - summary
+              - details
+            description: |
+              Fetch Type:
+                * `summary` - Will provide Order summary
+                * `details` - Will provide Order summary & Order
+                  Address
+      responses:
+        200:
+          description: Return product details
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/OrderSummary"
+                  - $ref: "#/components/schemas/OrderAddress"
+components:
+  parameters:
+    orderIdQueryParam:
+      name: orderId
+      in: query
+      required: true
+      schema:
+        type: integer
+      example: 34
+    orderPathParam:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    Address:
+      type: object
+      properties:
+        addressline:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          enum:
+            - California
+            - Texas
+            - Nevada
+            - South Carolina
+        zipcode:
+          type: string
+        isOffice:
+          type: boolean
+      required: [city, addressline, state, zipcode]
+    Product:
+      type: object
+      properties:
+        productId:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        categoryName:
+          type: string
+          nullable: true
+        releaseDate:
+          type: string
+          format: date
+          # Only the provider can set this value. That's why you're using that the object property readOnly and it only can be see from the response, not the request
+          readOnly: true
+        pass:
+          type: string
+          format: password
+          writeOnly: true
+        quantity:
+          type: integer
+    Category:
+      type: object
+      properties:
+        categoryId:
+          type: integer
+        name:
+          type: string
+    Mobile:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            networkType:
+              type: string
+              enum:
+                - 4g
+                - 5g
+              required: [networkType]
+    Laptop:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            ram:
+              type: string
+              enum:
+                - 8GB
+                - 16GB
+                - 32GB
+          required: [ram]
+    OrderSummary:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+    OrderAddress:
+      type: object
+      properties:
+        address:
+          $ref: "#/components/schemas/Address"
+  responses:
+    InternalServerError:
+      description: |
+        An error ocurred while processing the request
+        Please contact support at shop@support.com
+  links:
+    GetOrderByOrderId:
+      description: |
+        The `orderId` value returned in the response can be used
+          as input parameter in `GET /orders`.
+      operationId: getProductDetails
+      parameters:
+        orderId: '$response.body#/orderId'
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+    oAuth2AuthCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/api/oauth.access
+          scopes:
+            read: Read only access
+            write: Read Write access
+            admin: Admin acess
+      
+      
